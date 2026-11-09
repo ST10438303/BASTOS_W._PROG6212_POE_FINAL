@@ -1,6 +1,6 @@
 /* ============================================================
    RaceDay Database Script
-   PROG6212 - Portfolio of Evidence
+   PROG6212 - Portfolio of Evidence 
    Target: SQL Server (SSMS)
 
    Updated for Part 3: Users.ProfilePictureUrl and Events.BannerImageUrl store the URL of
