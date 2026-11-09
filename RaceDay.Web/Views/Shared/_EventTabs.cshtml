@@ -1,0 +1,21 @@
+@model EventTabsModel
+@{
+    string Tab(string key) => string.Equals(Model.Active, key, StringComparison.OrdinalIgnoreCase) ? "active" : string.Empty;
+}
+<div class="rd-page-head">
+    <div>
+        <a asp-controller="OrganiserEvents" asp-action="Index" class="rd-back"><i class="bi bi-arrow-left me-1"></i>All events</a>
+        <h1 class="rd-title">@Model.Event.EventName</h1>
+        <div class="rd-subtle">
+            <i class="bi bi-calendar-event me-1"></i>@Formatters.Date(Model.Event.EventDate)
+            <span class="mx-2">&middot;</span><i class="bi bi-geo-alt-fill me-1"></i>@Model.Event.Location
+            <span class="mx-2">&middot;</span><i class="bi @Formatters.TypeIcon(Model.Event.EventType) me-1"></i>@Model.Event.EventType, @Formatters.Km(Model.Event.Distance)
+        </div>
+    </div>
+</div>
+<ul class="nav rd-tabs mb-4">
+    <li class="nav-item"><a class="nav-link @Tab("details")" asp-controller="OrganiserEvents" asp-action="Edit" asp-route-id="@Model.Event.EventId"><i class="bi bi-pencil-square me-1"></i>Event details</a></li>
+    <li class="nav-item"><a class="nav-link @Tab("categories")" asp-controller="OrganiserCategories" asp-action="Index" asp-route-eventId="@Model.Event.EventId"><i class="bi bi-tags me-1"></i>Categories</a></li>
+    <li class="nav-item"><a class="nav-link @Tab("enrolments")" asp-controller="OrganiserEnrolments" asp-action="Index" asp-route-eventId="@Model.Event.EventId"><i class="bi bi-people me-1"></i>Enrolments</a></li>
+    <li class="nav-item"><a class="nav-link @Tab("results")" asp-controller="OrganiserResults" asp-action="Index" asp-route-eventId="@Model.Event.EventId"><i class="bi bi-stopwatch me-1"></i>Results</a></li>
+</ul>

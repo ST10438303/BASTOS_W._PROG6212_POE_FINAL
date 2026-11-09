@@ -1,0 +1,65 @@
+@model ProfileViewModel
+@{
+    ViewData["Title"] = "My profile";
+    var initial = string.IsNullOrWhiteSpace(Model.FullName) ? "?" : Model.FullName.Trim()[0].ToString().ToUpperInvariant();
+}
+<div class="rd-page-head">
+    <h1>My profile</h1>
+    <div class="rd-subtle">Keep your details up to date.</div>
+</div>
+
+<div class="row g-4">
+    <div class="col-lg-4">
+        <div class="rd-panel text-center">
+            @if (!string.IsNullOrEmpty(Model.ProfilePictureUrl))
+            {
+                <img src="@Model.ProfilePictureUrl" alt="Your profile picture" class="rd-profile-pic mb-3" />
+            }
+            else
+            {
+                <div class="rd-profile-pic rd-profile-initial mb-3">@initial</div>
+            }
+            <h3 class="mb-0">@Model.FullName</h3>
+            <div class="rd-subtle mb-1">@Model.Role</div>
+            <div class="rd-subtle small mb-3">Member since @Formatters.Date(Model.MemberSince)</div>
+
+            <form asp-action="UploadPicture" method="post" enctype="multipart/form-data" class="text-start">
+                <label for="picture" class="form-label">Profile picture</label>
+                <input type="file" id="picture" name="picture" class="form-control" accept="image/jpeg,image/png,image/webp" data-image-input data-preview="#picturePreview" />
+                <div class="rd-file-feedback text-danger small"></div>
+                <img id="picturePreview" class="rd-image-preview" alt="Preview" />
+                <div class="form-text">JPG, PNG or WEBP, up to 5 MB.</div>
+                <button type="submit" class="btn btn-rd-primary w-100 mt-3" data-once><i class="bi bi-cloud-arrow-up-fill me-1"></i>Upload picture</button>
+            </form>
+        </div>
+    </div>
+
+    <div class="col-lg-8">
+        <div class="rd-panel">
+            <h3 class="rd-section-title">Personal information</h3>
+            <form asp-action="Update" method="post" novalidate>
+                <div asp-validation-summary="ModelOnly" class="alert alert-danger rd-alert"></div>
+                <div class="mb-3">
+                    <label asp-for="FullName" class="form-label"></label>
+                    <input asp-for="FullName" class="form-control" />
+                    <span asp-validation-for="FullName" class="text-danger"></span>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label" for="email-readonly">Email address</label>
+                    <input id="email-readonly" class="form-control" value="@Model.Email" readonly />
+                    <div class="form-text">Your email is your login and can't be changed here.</div>
+                </div>
+                <div class="mb-4">
+                    <label asp-for="PhoneNumber" class="form-label"></label>
+                    <input asp-for="PhoneNumber" class="form-control" />
+                    <span asp-validation-for="PhoneNumber" class="text-danger"></span>
+                </div>
+                <button type="submit" class="btn btn-rd-accent" data-once>Save changes</button>
+            </form>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

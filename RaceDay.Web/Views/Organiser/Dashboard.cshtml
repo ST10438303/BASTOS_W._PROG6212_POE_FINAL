@@ -1,0 +1,103 @@
+@model DashboardViewModel
+@{
+    ViewData["Title"] = "Organiser dashboard";
+    var displayName = Context.Session.GetString(SessionKeys.FullName) ?? "Organiser";
+}
+<div class="rd-page-head d-flex flex-wrap justify-content-between align-items-end gap-3">
+    <div>
+        <h1>Dashboard</h1>
+        <div class="rd-subtle">Welcome back, @displayName. Here's how your events are shaping up.</div>
+    </div>
+    <a asp-controller="OrganiserEvents" asp-action="Create" class="btn btn-rd-accent btn-lg"><i class="bi bi-plus-circle-fill me-1"></i>Create event</a>
+</div>
+
+<div class="row g-3 mb-4">
+    <div class="col-md-4">
+        <div class="rd-stat rd-stat-navy"><div class="rd-stat-label">Events created</div><div class="rd-stat-value">@Model.TotalEvents</div><i class="bi bi-flag-fill"></i></div>
+    </div>
+    <div class="col-md-4">
+        <div class="rd-stat rd-stat-orange"><div class="rd-stat-label">Total enrolments</div><div class="rd-stat-value">@Model.TotalEnrolments</div><i class="bi bi-people-fill"></i></div>
+    </div>
+    <div class="col-md-4">
+        <div class="rd-stat rd-stat-lime"><div class="rd-stat-label">Upcoming events</div><div class="rd-stat-value">@Model.Upcoming.Count</div><i class="bi bi-calendar-event-fill"></i></div>
+    </div>
+</div>
+
+@if (Model.TotalEvents == 0)
+{
+    <div class="rd-panel rd-empty">
+        <i class="bi bi-flag"></i>
+        <h2>Create your first event</h2>
+        <p class="mb-4">Set up an event, add categories and participants can start entering.</p>
+        <a asp-controller="OrganiserEvents" asp-action="Create" class="btn btn-rd-accent">Create event</a>
+    </div>
+}
+else
+{
+    if (Model.NextEvent != null)
+    {
+        var next = Model.NextEvent;
+        <div class="rd-panel rd-next mb-4">
+            <div class="d-flex flex-wrap justify-content-between align-items-center gap-3">
+                <div>
+                    <div class="rd-hero-eyebrow" style="color: var(--rd-orange-dark)">Next up &middot; @Formatters.Relative(next.EventDate)</div>
+                    <h2 class="mb-1">@next.EventName</h2>
+                    <div class="rd-subtle"><i class="bi bi-calendar-event me-1"></i>@Formatters.LongDate(next.EventDate) <span class="mx-2">&middot;</span><i class="bi bi-geo-alt-fill me-1"></i>@next.Location <span class="mx-2">&middot;</span><strong>@next.EnrolmentCount</strong> enrolled</div>
+                </div>
+                <a asp-controller="OrganiserEnrolments" asp-action="Index" asp-route-eventId="@next.EventId" class="btn btn-rd-primary">View enrolments</a>
+            </div>
+        </div>
+    }
+
+    <div class="row g-4">
+        <div class="col-lg-5">
+            <div class="rd-panel h-100">
+                <h2 class="rd-section-title">Upcoming event dates</h2>
+                @if (Model.Upcoming.Count == 0)
+                {
+                    <p class="rd-subtle mb-0">None of your events are coming up. Create a new one!</p>
+                }
+                else
+                {
+                    <div class="table-responsive">
+                        <table class="table rd-table">
+                            <thead><tr><th>Date</th><th>Event</th><th class="text-end">Enrolled</th></tr></thead>
+                            <tbody>
+                            @foreach (var ev in Model.Upcoming)
+                            {
+                                <tr>
+                                    <td class="text-nowrap"><strong>@Formatters.Date(ev.EventDate)</strong><div class="rd-subtle small">@Formatters.Relative(ev.EventDate)</div></td>
+                                    <td>@ev.EventName</td>
+                                    <td class="text-end"><span class="rd-pill m-0">@ev.EnrolmentCount</span></td>
+                                </tr>
+                            }
+                            </tbody>
+                        </table>
+                    </div>
+                }
+            </div>
+        </div>
+        <div class="col-lg-7">
+            <div class="rd-panel h-100">
+                <h2 class="rd-section-title">All my events</h2>
+                <div class="table-responsive">
+                    <table class="table rd-table">
+                        <thead><tr><th>Event</th><th>Date</th><th>Type</th><th class="text-end">Enrolments</th><th></th></tr></thead>
+                        <tbody>
+                        @foreach (var ev in Model.Events.OrderByDescending(e => e.EventDate))
+                        {
+                            <tr>
+                                <td class="fw-bold">@ev.EventName</td>
+                                <td class="text-nowrap">@Formatters.Date(ev.EventDate)</td>
+                                <td><i class="bi @Formatters.TypeIcon(ev.EventType) me-1"></i>@ev.EventType</td>
+                                <td class="text-end"><span class="rd-pill m-0">@ev.EnrolmentCount</span></td>
+                                <td class="text-end"><a asp-controller="OrganiserEnrolments" asp-action="Index" asp-route-eventId="@ev.EventId" class="btn btn-sm btn-outline-rd">Manage</a></td>
+                            </tr>
+                        }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+}

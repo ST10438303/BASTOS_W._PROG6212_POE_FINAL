@@ -1,0 +1,145 @@
+@model EventDetailsViewModel
+@{
+    var ev = Model.Event;
+    ViewData["Title"] = ev.EventName;
+    var typeClass = "rd-type-" + ev.EventType.ToLowerInvariant();
+    var isAuthenticated = User.Identity?.IsAuthenticated == true;
+    var isParticipant = User.IsInRole(RoleNames.Participant);
+    var isOrganiser = User.IsInRole(RoleNames.Organiser);
+    var returnUrl = Context.Request.Path.ToString();
+}
+
+<div class="mb-3">
+    <a asp-controller="Home" asp-action="Index" class="rd-back"><i class="bi bi-arrow-left me-1"></i>All events</a>
+</div>
+
+<div class="rd-banner @typeClass">
+    @if (!string.IsNullOrEmpty(ev.BannerImageUrl))
+    {
+        <img src="@ev.BannerImageUrl" alt="@ev.EventName banner" />
+    }
+    else
+    {
+        <span class="rd-banner-fallback"><i class="bi @Formatters.TypeIcon(ev.EventType)"></i></span>
+    }
+    <span class="rd-type-badge @typeClass"><i class="bi @Formatters.TypeIcon(ev.EventType) me-1"></i>@ev.EventType</span>
+</div>
+
+<div class="row g-4">
+    <div class="col-lg-8">
+        <h1>@ev.EventName</h1>
+        @if (Model.IsPast)
+        {
+            <span class="rd-pill rd-pill-full mb-3"><i class="bi bi-flag-fill me-1"></i>This event has finished</span>
+        }
+        @if (!string.IsNullOrWhiteSpace(ev.Description))
+        {
+            <p class="fs-5">@ev.Description</p>
+        }
+        @if (!string.IsNullOrWhiteSpace(ev.RouteInfo))
+        {
+            <div class="rd-panel mb-4">
+                <h3 class="rd-section-title"><i class="bi bi-signpost-split-fill me-2 text-warning"></i>Route</h3>
+                <p class="mb-0">@ev.RouteInfo</p>
+            </div>
+        }
+
+        <h2 class="rd-section-title">Choose your category</h2>
+        @if (Model.Categories.Count == 0)
+        {
+            <div class="rd-panel rd-empty">
+                <i class="bi bi-tags"></i>
+                <p class="mb-0">The organiser hasn't added any categories yet. Please check back soon.</p>
+            </div>
+        }
+        else
+        {
+            foreach (var cat in Model.Categories)
+            {
+                var isFull = cat.MaxParticipants > 0 && cat.CurrentEnrolmentCount >= cat.MaxParticipants;
+                var spotsLeft = cat.MaxParticipants - cat.CurrentEnrolmentCount;
+                var hasMine = Model.MyEnrolments.TryGetValue(cat.CategoryId, out var mine);
+
+                <div class="rd-category">
+                    <div class="d-flex flex-wrap justify-content-between align-items-center gap-3">
+                        <div>
+                            <div class="rd-category-name">@cat.CategoryName</div>
+                            <div class="mt-1">
+                                @if (cat.DistanceKm.HasValue)
+                                {
+                                    <span class="rd-pill"><i class="bi bi-signpost-split me-1"></i>@Formatters.Km(cat.DistanceKm.Value)</span>
+                                }
+                                @if (cat.MinAge.HasValue || cat.MaxAge.HasValue)
+                                {
+                                    <span class="rd-pill"><i class="bi bi-people me-1"></i>@Formatters.AgeRange(cat.MinAge, cat.MaxAge)</span>
+                                }
+                                <span class="rd-pill"><i class="bi bi-cash-coin me-1"></i>@Formatters.Money(cat.EntryFee)</span>
+                                @if (cat.MaxParticipants == 0)
+                                {
+                                    <span class="rd-pill">Unlimited spots</span>
+                                }
+                                else if (isFull)
+                                {
+                                    <span class="rd-pill rd-pill-full">Full</span>
+                                }
+                                else
+                                {
+                                    <span class="rd-pill">@spotsLeft of @cat.MaxParticipants spots left</span>
+                                }
+                            </div>
+                        </div>
+                        <div class="text-end">
+                            @if (isOrganiser)
+                            {
+                                <span class="rd-subtle small">Organisers can't enter events</span>
+                            }
+                            else if (!isAuthenticated)
+                            {
+                                <a class="btn btn-rd-accent" asp-controller="Account" asp-action="Login" asp-route-returnUrl="@returnUrl">Log in to enrol</a>
+                            }
+                            else if (isParticipant && hasMine && mine != null)
+                            {
+                                <div class="d-flex flex-column align-items-end gap-2">
+                                    <partial name="_StatusBadge" model="mine.Status" />
+                                    <span class="rd-subtle small">Race number <strong>@mine.RaceNumber</strong></span>
+                                    <form asp-controller="Enrolments" asp-action="Cancel" method="post" data-confirm="Cancel your enrolment in @cat.CategoryName?">
+                                        <input type="hidden" name="id" value="@mine.EnrolmentId" />
+                                        <input type="hidden" name="eventId" value="@ev.EventId" />
+                                        <button type="submit" class="btn btn-sm btn-outline-danger">Cancel enrolment</button>
+                                    </form>
+                                </div>
+                            }
+                            else if (Model.IsPast)
+                            {
+                                <span class="rd-subtle">Enrolment closed</span>
+                            }
+                            else if (isFull)
+                            {
+                                <button type="button" class="btn btn-secondary" disabled>Category full</button>
+                            }
+                            else
+                            {
+                                <form asp-controller="Enrolments" asp-action="Create" method="post">
+                                    <input type="hidden" name="categoryId" value="@cat.CategoryId" />
+                                    <input type="hidden" name="eventId" value="@ev.EventId" />
+                                    <button type="submit" class="btn btn-rd-accent" data-once><i class="bi bi-lightning-charge-fill me-1"></i>Enrol now</button>
+                                </form>
+                            }
+                        </div>
+                    </div>
+                </div>
+            }
+        }
+    </div>
+
+    <div class="col-lg-4">
+        <div class="rd-panel">
+            <h3 class="rd-section-title">Event info</h3>
+            <div class="rd-fact"><i class="bi bi-calendar-event"></i><div><div class="rd-fact-label">Date</div><div class="rd-fact-value">@Formatters.LongDate(ev.EventDate)</div><div class="rd-subtle small">@Formatters.Relative(ev.EventDate)</div></div></div>
+            <div class="rd-fact"><i class="bi bi-geo-alt-fill"></i><div><div class="rd-fact-label">Location</div><div class="rd-fact-value">@ev.Location</div></div></div>
+            <div class="rd-fact"><i class="bi bi-signpost-split-fill"></i><div><div class="rd-fact-label">Distance</div><div class="rd-fact-value">@Formatters.Km(ev.Distance)</div></div></div>
+            <div class="rd-fact"><i class="bi @Formatters.TypeIcon(ev.EventType)"></i><div><div class="rd-fact-label">Event type</div><div class="rd-fact-value">@ev.EventType</div></div></div>
+            <div class="rd-fact"><i class="bi bi-person-badge-fill"></i><div><div class="rd-fact-label">Organised by</div><div class="rd-fact-value">@ev.OrganiserName</div></div></div>
+        </div>
+    </div>
+</div>

@@ -1,0 +1,24 @@
+@{
+    var code = ViewData["Code"] is int c ? c : 500;
+    ViewData["Title"] = code == 404 ? "Page not found" : "Something went wrong";
+    var isOrganiser = User.IsInRole(RoleNames.Organiser);
+}
+<div class="rd-panel rd-empty">
+    <i class="bi @(code == 404 ? "bi-signpost-split-fill" : "bi-exclamation-octagon-fill")"></i>
+    @if (code == 404)
+    {
+        <h1>We couldn't find that page</h1>
+        <p class="mb-4">The page or event you were looking for doesn't exist, or it may have been removed.</p>
+    }
+    else if (code == 403)
+    {
+        <h1>You don't have access to that</h1>
+        <p class="mb-4">Your account isn't allowed to open this page.</p>
+    }
+    else
+    {
+        <h1>Something went wrong</h1>
+        <p class="mb-4">We hit a problem loading that page. Please try again in a moment.</p>
+    }
+    <a class="btn btn-rd-primary" asp-controller="@(isOrganiser ? "Organiser" : "Home")" asp-action="@(isOrganiser ? "Dashboard" : "Index")">Back to home</a>
+</div>

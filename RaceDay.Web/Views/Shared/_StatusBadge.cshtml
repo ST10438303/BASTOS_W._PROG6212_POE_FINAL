@@ -1,0 +1,12 @@
+@model string
+@{
+    var status = Model ?? string.Empty;
+    var (css, icon) = status switch
+    {
+        "Confirmed" => ("rd-status-confirmed", "bi-check-circle-fill"),
+        "Pending" => ("rd-status-pending", "bi-hourglass-split"),
+        "Cancelled" => ("rd-status-cancelled", "bi-x-circle-fill"),
+        _ => ("rd-status-cancelled", "bi-question-circle-fill")
+    };
+}
+<span class="rd-status @css"><i class="bi @icon me-1"></i>@status</span>

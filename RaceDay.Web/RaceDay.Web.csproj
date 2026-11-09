@@ -1,0 +1,16 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <RootNamespace>RaceDay.Web</RootNamespace>
+  </PropertyGroup>
+
+  <!--
+    Intentionally NO reference to RaceDay.Api and NO database / Azure packages:
+    the MVC application only talks to the Part 2 API over HTTP, and the API owns
+    all data access, business rules and Azure Blob Storage.
+  -->
+
+</Project>

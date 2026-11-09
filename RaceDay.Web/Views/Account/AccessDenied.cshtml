@@ -1,0 +1,17 @@
+@{
+    ViewData["Title"] = "Access denied";
+    var isOrganiser = User.IsInRole(RoleNames.Organiser);
+}
+<div class="rd-panel rd-empty">
+    <i class="bi bi-shield-lock-fill"></i>
+    <h1>This area isn't for your role</h1>
+    <p class="mb-4">Your account doesn't have permission to open that page.</p>
+    @if (User.Identity?.IsAuthenticated == true)
+    {
+        <a class="btn btn-rd-primary" asp-controller="@(isOrganiser ? "Organiser" : "Home")" asp-action="@(isOrganiser ? "Dashboard" : "Index")">Take me back to my home page</a>
+    }
+    else
+    {
+        <a class="btn btn-rd-primary" asp-controller="Account" asp-action="Login">Log in</a>
+    }
+</div>

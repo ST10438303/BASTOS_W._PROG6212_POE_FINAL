@@ -1,0 +1,53 @@
+@model EnrolmentsPageViewModel
+@{
+    ViewData["Title"] = "Enrolments - " + Model.Event.EventName;
+    var pending = Model.Enrolments.Count(e => e.Status == "Pending");
+    var confirmed = Model.Enrolments.Count(e => e.Status == "Confirmed");
+}
+<partial name="_EventTabs" model='new EventTabsModel(Model.Event, "enrolments")' />
+
+<div class="rd-panel">
+    <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-3">
+        <h2 class="rd-section-title m-0">Participants</h2>
+        <div class="d-flex gap-2 flex-wrap">
+            <span class="rd-status rd-status-confirmed">@confirmed confirmed</span>
+            <span class="rd-status rd-status-pending">@pending pending</span>
+        </div>
+    </div>
+
+    @if (Model.Enrolments.Count == 0)
+    {
+        <div class="rd-empty py-4">
+            <i class="bi bi-people"></i>
+            <p class="mb-0">Nobody has enrolled for this event yet.</p>
+        </div>
+    }
+    else
+    {
+        <div class="table-responsive">
+            <table class="table rd-table">
+                <thead><tr><th>Participant</th><th>Category</th><th>Race no.</th><th>Enrolled on</th><th>Status</th><th></th></tr></thead>
+                <tbody>
+                @foreach (var e in Model.Enrolments)
+                {
+                    <tr>
+                        <td class="fw-bold">@e.ParticipantName</td>
+                        <td>@e.CategoryName</td>
+                        <td><code>@e.RaceNumber</code></td>
+                        <td>@Formatters.Date(e.EnrolmentDate)</td>
+                        <td><partial name="_StatusBadge" model="e.Status" /></td>
+                        <td class="text-end">
+                            @if (e.Status == "Pending")
+                            {
+                                <form asp-action="Confirm" asp-route-eventId="@Model.Event.EventId" asp-route-id="@e.EnrolmentId" method="post" class="d-inline">
+                                    <button type="submit" class="btn btn-sm btn-rd-lime" data-once><i class="bi bi-check-lg me-1"></i>Confirm</button>
+                                </form>
+                            }
+                        </td>
+                    </tr>
+                }
+                </tbody>
+            </table>
+        </div>
+    }
+</div>

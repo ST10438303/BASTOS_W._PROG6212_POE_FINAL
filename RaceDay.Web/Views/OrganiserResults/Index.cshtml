@@ -1,0 +1,67 @@
+@model ResultsEntryPageViewModel
+@{
+    ViewData["Title"] = "Results - " + Model.Event.EventName;
+    var captured = Model.Rows.Count(r => r.ExistingResult != null);
+}
+<partial name="_EventTabs" model='new EventTabsModel(Model.Event, "results")' />
+
+<div class="rd-panel mb-3">
+    <div class="d-flex flex-wrap justify-content-between align-items-center gap-2">
+        <div>
+            <h2 class="rd-section-title mb-1">Capture results</h2>
+            <div class="rd-subtle">Enter each participant's finish time (hh:mm:ss) and positions. Saved results appear on the participant's "My results" page straight away.</div>
+        </div>
+        <span class="rd-pill m-0">@captured of @Model.Rows.Count captured</span>
+    </div>
+</div>
+
+@if (Model.Rows.Count == 0)
+{
+    <div class="rd-panel rd-empty">
+        <i class="bi bi-stopwatch"></i>
+        <p class="mb-0">There are no enrolled participants to capture results for yet.</p>
+    </div>
+}
+else
+{
+    foreach (var row in Model.Rows)
+    {
+        var r = row.ExistingResult;
+        <div class="rd-panel py-3">
+            <form asp-action="Save" asp-route-eventId="@Model.Event.EventId" method="post">
+                <input type="hidden" name="EnrolmentId" value="@row.Enrolment.EnrolmentId" />
+                <input type="hidden" name="ResultId" value="@(r?.ResultId)" />
+                <div class="row g-3 align-items-end">
+                    <div class="col-lg-3">
+                        <div class="fw-bold">@row.Enrolment.ParticipantName</div>
+                        <div class="rd-subtle small">@row.Enrolment.CategoryName &middot; <code>@row.Enrolment.RaceNumber</code></div>
+                        <div class="mt-1"><partial name="_StatusBadge" model="row.Enrolment.Status" /></div>
+                    </div>
+                    <div class="col-6 col-lg-2">
+                        <label class="form-label small mb-1">Finish time</label>
+                        <input name="FinishTime" class="form-control" placeholder="01:45:30" inputmode="numeric" maxlength="8" value="@Formatters.FinishTimeInput(r?.FinishTime)" />
+                    </div>
+                    <div class="col-6 col-lg-2">
+                        <label class="form-label small mb-1">Overall position</label>
+                        <input name="OverallPosition" type="number" min="1" class="form-control" value="@r?.OverallPosition" />
+                    </div>
+                    <div class="col-6 col-lg-2">
+                        <label class="form-label small mb-1">Category position</label>
+                        <input name="CategoryPosition" type="number" min="1" class="form-control" value="@r?.CategoryPosition" />
+                    </div>
+                    <div class="col-6 col-lg-2">
+                        <label class="form-label small mb-1">Status</label>
+                        <select name="CompletionStatus" class="form-select">
+                            <option value="Finished" selected="@(r == null || r.CompletionStatus == "Finished")">Finished</option>
+                            <option value="DNF" selected="@(r?.CompletionStatus == "DNF")">DNF</option>
+                            <option value="DQ" selected="@(r?.CompletionStatus == "DQ")">DQ</option>
+                        </select>
+                    </div>
+                    <div class="col-lg-1 d-grid">
+                        <button type="submit" class="btn @(r == null ? "btn-rd-accent" : "btn-rd-primary")" title="@(r == null ? "Save result" : "Update result")"><i class="bi bi-check-lg"></i></button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    }
+}

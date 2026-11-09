@@ -1,0 +1,99 @@
+@model EventFormViewModel
+@{
+    var isEdit = Model.EventId.HasValue;
+    ViewData["Title"] = isEdit ? "Edit event" : "Create event";
+}
+
+@if (isEdit)
+{
+    var tabEvent = new EventDto
+    {
+        EventId = Model.EventId!.Value,
+        EventName = Model.EventName,
+        EventDate = Model.EventDate ?? DateTime.UtcNow,
+        Location = Model.Location,
+        EventType = string.IsNullOrEmpty(Model.EventType) ? "Run" : Model.EventType,
+        Distance = Model.Distance ?? 0
+    };
+    <partial name="_EventTabs" model='new EventTabsModel(tabEvent, "details")' />
+}
+else
+{
+    <div class="rd-page-head">
+        <a asp-action="Index" class="rd-back"><i class="bi bi-arrow-left me-1"></i>All events</a>
+        <h1>Create event</h1>
+        <div class="rd-subtle">Tell participants what, when and where. You'll add categories next.</div>
+    </div>
+}
+
+<div class="rd-panel">
+    <form asp-action="@(isEdit ? "Edit" : "Create")" asp-route-id="@Model.EventId" method="post" enctype="multipart/form-data" novalidate>
+        <div asp-validation-summary="ModelOnly" class="alert alert-danger rd-alert"></div>
+
+        <div class="row g-3">
+            <div class="col-md-8">
+                <label asp-for="EventName" class="form-label"></label>
+                <input asp-for="EventName" class="form-control" />
+                <span asp-validation-for="EventName" class="text-danger"></span>
+            </div>
+            <div class="col-md-4">
+                <label asp-for="EventType" class="form-label"></label>
+                <select asp-for="EventType" class="form-select">
+                    <option value="">Choose...</option>
+                    <option value="Run">Run</option>
+                    <option value="Walk">Walk</option>
+                    <option value="Cycle">Cycle</option>
+                </select>
+                <span asp-validation-for="EventType" class="text-danger"></span>
+            </div>
+            <div class="col-12">
+                <label asp-for="Description" class="form-label"></label>
+                <textarea asp-for="Description" class="form-control" rows="3"></textarea>
+                <span asp-validation-for="Description" class="text-danger"></span>
+            </div>
+            <div class="col-md-4">
+                <label asp-for="EventDate" class="form-label"></label>
+                <input asp-for="EventDate" class="form-control" />
+                <span asp-validation-for="EventDate" class="text-danger"></span>
+            </div>
+            <div class="col-md-5">
+                <label asp-for="Location" class="form-label"></label>
+                <input asp-for="Location" class="form-control" />
+                <span asp-validation-for="Location" class="text-danger"></span>
+            </div>
+            <div class="col-md-3">
+                <label asp-for="Distance" class="form-label"></label>
+                <input asp-for="Distance" class="form-control" type="number" step="0.1" min="0.1" />
+                <span asp-validation-for="Distance" class="text-danger"></span>
+            </div>
+            <div class="col-12">
+                <label asp-for="RouteInfo" class="form-label"></label>
+                <textarea asp-for="RouteInfo" class="form-control" rows="2"></textarea>
+                <span asp-validation-for="RouteInfo" class="text-danger"></span>
+            </div>
+            <div class="col-12">
+                <label asp-for="BannerFile" class="form-label"></label>
+                @if (!string.IsNullOrEmpty(Model.BannerImageUrl))
+                {
+                    <div class="mb-2">
+                        <img src="@Model.BannerImageUrl" alt="Current banner" class="rd-current-banner" />
+                        <div class="form-text">Current banner. Choose a new image below to replace it.</div>
+                    </div>
+                }
+                <input asp-for="BannerFile" type="file" class="form-control" accept="image/jpeg,image/png,image/webp" data-image-input data-preview="#bannerPreview" />
+                <div class="rd-file-feedback text-danger small"></div>
+                <img id="bannerPreview" class="rd-image-preview" alt="Banner preview" />
+                <div class="form-text">Optional. JPG, PNG or WEBP, up to 5 MB. A wide image works best.</div>
+            </div>
+        </div>
+
+        <div class="mt-4 d-flex gap-2">
+            <button type="submit" class="btn btn-rd-accent btn-lg" data-once>@(isEdit ? "Save changes" : "Create event")</button>
+            <a asp-action="Index" class="btn btn-outline-secondary btn-lg">Cancel</a>
+        </div>
+    </form>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

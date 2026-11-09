@@ -1,0 +1,53 @@
+@model List<ResultDto>
+@{
+    ViewData["Title"] = "My results";
+}
+<div class="rd-page-head">
+    <h1>My results</h1>
+    <div class="rd-subtle">Your personal race history across every completed event.</div>
+</div>
+
+@if (Model.Count == 0)
+{
+    <div class="rd-panel rd-empty">
+        <i class="bi bi-trophy"></i>
+        <h2>No results yet</h2>
+        <p class="mb-4">Once an organiser captures the results of an event you entered, they'll show up here.</p>
+        <a asp-controller="Enrolments" asp-action="Index" class="btn btn-rd-primary">See my enrolments</a>
+    </div>
+}
+else
+{
+    foreach (var r in Model)
+    {
+        var finished = r.CompletionStatus == "Finished";
+        <div class="rd-panel rd-result">
+            <div class="flex-grow-1">
+                <div class="rd-event-date"><i class="bi bi-calendar-event me-1"></i>@Formatters.Date(r.EventDate)</div>
+                <h3 class="mb-1"><a asp-controller="Events" asp-action="Details" asp-route-id="@r.EventId" class="text-decoration-none">@r.EventName</a></h3>
+                <div class="rd-subtle"><i class="bi bi-tag-fill me-1"></i>@r.CategoryName</div>
+            </div>
+            <div class="text-md-end">
+                @if (finished)
+                {
+                    <div class="rd-result-time">@Formatters.FinishTime(r.FinishTime)</div>
+                    <div class="rd-subtle small text-uppercase fw-bold">Finish time</div>
+                }
+                else
+                {
+                    <span class="rd-status rd-status-cancelled"><i class="bi bi-slash-circle me-1"></i>@r.CompletionStatus</span>
+                }
+            </div>
+            @if (finished && r.OverallPosition.HasValue)
+            {
+                <div class="text-md-end">
+                    <div class="rd-result-position fs-5"><i class="bi bi-trophy-fill rd-podium me-1"></i>@Formatters.Ordinal(r.OverallPosition.Value)@(r.TotalFinishers > 0 ? $" of {r.TotalFinishers} finishers" : string.Empty)</div>
+                    @if (r.CategoryPosition.HasValue)
+                    {
+                        <div class="rd-subtle small">@Formatters.Ordinal(r.CategoryPosition.Value) in category</div>
+                    }
+                </div>
+            }
+        </div>
+    }
+}

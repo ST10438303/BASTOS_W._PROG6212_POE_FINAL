@@ -1,0 +1,63 @@
+@model List<EventDto>
+@{
+    ViewData["Title"] = "Manage events";
+}
+<div class="rd-page-head d-flex flex-wrap justify-content-between align-items-end gap-3">
+    <div>
+        <h1>Manage events</h1>
+        <div class="rd-subtle">Create, edit and delete your events.</div>
+    </div>
+    <a asp-action="Create" class="btn btn-rd-accent btn-lg"><i class="bi bi-plus-circle-fill me-1"></i>Create event</a>
+</div>
+
+@if (Model.Count == 0)
+{
+    <div class="rd-panel rd-empty">
+        <i class="bi bi-flag"></i>
+        <h2>No events yet</h2>
+        <p class="mb-4">Create your first event to start taking enrolments.</p>
+        <a asp-action="Create" class="btn btn-rd-accent">Create event</a>
+    </div>
+}
+else
+{
+    <div class="rd-panel">
+        <div class="table-responsive">
+            <table class="table rd-table">
+                <thead><tr><th></th><th>Event</th><th>Date</th><th>Type</th><th>Distance</th><th class="text-end">Enrolments</th><th class="text-end">Actions</th></tr></thead>
+                <tbody>
+                @foreach (var ev in Model)
+                {
+                    <tr>
+                        <td>
+                            @if (!string.IsNullOrEmpty(ev.BannerImageUrl))
+                            {
+                                <img class="rd-thumb" src="@ev.BannerImageUrl" alt="" loading="lazy" />
+                            }
+                            else
+                            {
+                                <span class="rd-thumb rd-thumb-fallback rd-type-@ev.EventType.ToLowerInvariant()" style="background: var(--rd-navy-2)"><i class="bi @Formatters.TypeIcon(ev.EventType)"></i></span>
+                            }
+                        </td>
+                        <td><div class="fw-bold">@ev.EventName</div><div class="rd-subtle small">@ev.Location</div></td>
+                        <td class="text-nowrap">@Formatters.Date(ev.EventDate)<div class="rd-subtle small">@Formatters.Relative(ev.EventDate)</div></td>
+                        <td><i class="bi @Formatters.TypeIcon(ev.EventType) me-1"></i>@ev.EventType</td>
+                        <td class="text-nowrap">@Formatters.Km(ev.Distance)</td>
+                        <td class="text-end"><span class="rd-pill m-0">@ev.EnrolmentCount</span></td>
+                        <td class="text-end text-nowrap">
+                            <a asp-controller="OrganiserCategories" asp-action="Index" asp-route-eventId="@ev.EventId" class="btn btn-sm btn-outline-rd" title="Categories"><i class="bi bi-tags"></i></a>
+                            <a asp-controller="OrganiserEnrolments" asp-action="Index" asp-route-eventId="@ev.EventId" class="btn btn-sm btn-outline-rd" title="Enrolments"><i class="bi bi-people"></i></a>
+                            <a asp-controller="OrganiserResults" asp-action="Index" asp-route-eventId="@ev.EventId" class="btn btn-sm btn-outline-rd" title="Results"><i class="bi bi-stopwatch"></i></a>
+                            <a asp-action="Edit" asp-route-id="@ev.EventId" class="btn btn-sm btn-rd-primary" title="Edit"><i class="bi bi-pencil-square"></i></a>
+                            <form asp-action="Delete" asp-route-id="@ev.EventId" method="post" class="d-inline"
+                                  data-confirm="Delete &quot;@ev.EventName&quot;? This also removes its categories and cannot be undone.">
+                                <button type="submit" class="btn btn-sm btn-outline-danger" title="Delete"><i class="bi bi-trash"></i></button>
+                            </form>
+                        </td>
+                    </tr>
+                }
+                </tbody>
+            </table>
+        </div>
+    </div>
+}

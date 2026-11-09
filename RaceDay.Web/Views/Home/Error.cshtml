@@ -1,0 +1,13 @@
+@{
+    ViewData["Title"] = "Something went wrong";
+}
+<div class="rd-panel rd-empty">
+    <i class="bi bi-exclamation-octagon-fill"></i>
+    <h1>Something went wrong</h1>
+    <p class="mb-4">An unexpected problem stopped that page from loading. Nothing you entered has been lost. Please try again.</p>
+    <a class="btn btn-rd-primary" asp-controller="Home" asp-action="Index">Back to home</a>
+    @if (ViewData["RequestId"] is string requestId)
+    {
+        <p class="rd-subtle small mt-4 mb-0">Reference: @requestId</p>
+    }
+</div>
