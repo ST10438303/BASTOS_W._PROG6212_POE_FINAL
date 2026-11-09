@@ -1,0 +1,23 @@
+# syntax=docker/dockerfile:1
+# ------------------------------------------------------------------------------
+# RaceDay REST API (Part 2 + Azure Blob Storage), used by docker-compose.yml
+# Build context = repository root:   docker build -f Dockerfile.api -t raceday-api .
+# ------------------------------------------------------------------------------
+
+FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
+WORKDIR /src
+
+COPY RaceDay.Api/RaceDay.Api.csproj RaceDay.Api/
+RUN dotnet restore RaceDay.Api/RaceDay.Api.csproj
+
+COPY RaceDay.Api/ RaceDay.Api/
+RUN dotnet publish RaceDay.Api/RaceDay.Api.csproj \
+    --configuration Release --no-restore --output /app/publish /p:UseAppHost=false
+
+FROM mcr.microsoft.com/dotnet/aspnet:8.0 AS final
+WORKDIR /app
+ENV ASPNETCORE_HTTP_PORTS=8080
+EXPOSE 8080
+COPY --from=build /app/publish .
+USER $APP_UID
+ENTRYPOINT ["dotnet", "RaceDay.Api.dll"]

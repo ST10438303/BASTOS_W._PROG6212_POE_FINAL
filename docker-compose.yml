@@ -1,0 +1,75 @@
+# ------------------------------------------------------------------------------
+# Runs the WHOLE RaceDay platform with one command:
+#
+#     docker compose up --build
+#
+#   MVC web app   ->  http://localhost:5200
+#   REST API      ->  http://localhost:5100/swagger
+#   Azurite (Azure Blob Storage emulator) -> http://localhost:10000
+#   SQL Server    -> localhost:1433  (sa / see MSSQL_SA_PASSWORD below)
+#
+# The API runs in the "Development" environment so it creates the database and seeds
+# the demo data on first start (see RaceDay.Api/Data/DbSeeder.cs).
+# ------------------------------------------------------------------------------
+name: raceday
+
+services:
+  sqlserver:
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    environment:
+      ACCEPT_EULA: "Y"
+      MSSQL_SA_PASSWORD: "RaceDay_Passw0rd!"
+    ports:
+      - "1433:1433"
+    volumes:
+      - sqldata:/var/opt/mssql
+    healthcheck:
+      test: ["CMD-SHELL", "/opt/mssql-tools18/bin/sqlcmd -C -S localhost -U sa -P \"$$MSSQL_SA_PASSWORD\" -Q \"SELECT 1\" || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 20
+      start_period: 20s
+
+  azurite:
+    image: mcr.microsoft.com/azure-storage/azurite
+    command: azurite-blob --blobHost 0.0.0.0 --skipApiVersionCheck --loose
+    ports:
+      - "10000:10000"
+    volumes:
+      - blobdata:/data
+
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile.api
+    depends_on:
+      sqlserver:
+        condition: service_healthy
+      azurite:
+        condition: service_started
+    environment:
+      ASPNETCORE_ENVIRONMENT: Development
+      ASPNETCORE_URLS: http://+:8080
+      ConnectionStrings__DefaultConnection: "Server=sqlserver;Database=RaceDayDB;User Id=sa;Password=RaceDay_Passw0rd!;TrustServerCertificate=True"
+      # Well-known Azurite development account. The API reaches Azurite as "azurite",
+      # but the browser must use "localhost", hence PublicBaseUrl.
+      AzureBlobStorage__ConnectionString: "DefaultEndpointsProtocol=http;AccountName=devstoreaccount1;AccountKey=Eby8vdM02xNOcqFlqUwJPLlmEtlCDXJ1OUzFT50uSRZ6IFsuFq2UVErCz4I6tq/K1SZFPTOtr/KBHBeksoGMGw==;BlobEndpoint=http://azurite:10000/devstoreaccount1;"
+      AzureBlobStorage__PublicBaseUrl: "http://localhost:10000/devstoreaccount1"
+    ports:
+      - "5100:8080"
+    restart: on-failure
+
+  web:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    depends_on:
+      - api
+    environment:
+      Api__BaseUrl: http://api:8080
+    ports:
+      - "5200:8080"
+
+volumes:
+  sqldata:
+  blobdata:
